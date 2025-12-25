@@ -1,5 +1,8 @@
-from flask import Flask, render_template, request, send_file, session, redirect, url_for, jsonify
+from flask import Flask, render_template, request, send_file, session, redirect, url_for, jsonify, Response
 import os
+from dotenv import load_dotenv
+load_dotenv()  # Load .env file
+
 import google.generativeai as genai
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
@@ -9,15 +12,13 @@ import random
 import time
 import requests
 import PyPDF2
+import base64
+from io import BytesIO
 
 app = Flask(__name__)
-script_dir = os.path.dirname(os.path.abspath(__file__))
-uploads_dir = os.path.join(script_dir, "uploads")
-os.makedirs(uploads_dir, exist_ok=True)
 
-
-app.config['UPLOAD_FOLDER'] = uploads_dir
-app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  
+# In-memory storage for Vercel compatibility (no disk writes needed)
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max
 ALLOWED_EXTENSIONS = {'pdf'}
 app.secret_key = "nullisgreat"   
 
@@ -28,8 +29,9 @@ model = genai.GenerativeModel("gemini-2.5-flash", generation_config={
     "max_output_tokens": 20480
 })
 
-# Store extracted PDF text instead of uploading to Gemini (saves credits)
-uploaded_pdf_text = {}
+# In-memory storage - no files saved to disk (Vercel compatible)
+uploaded_pdf_text = {}  # Store extracted text
+uploaded_pdf_data = {}  # Store PDF bytes for viewer
 
 @app.route('/')
 def index():
@@ -444,19 +446,23 @@ def upload_pdf():
             return jsonify({"error": "Invalid file type. Please upload a PDF file."}), 400
             
         filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
         
-        # Extract text using PyPDF2 (saves Gemini credits!)
-        print(f"Extracting text from {filename} using PyPDF2...")
+        # Read PDF into memory (no disk write - Vercel compatible!)
+        pdf_bytes = file.read()
+        
+        # Store PDF bytes for viewer
+        uploaded_pdf_data[filename] = pdf_bytes
+        
+        # Extract text using PyPDF2 from memory
+        print(f"Extracting text from {filename} using PyPDF2 (in-memory)...")
         pdf_text = ""
         try:
-            with open(filepath, 'rb') as pdf_file:
-                pdf_reader = PyPDF2.PdfReader(pdf_file)
-                for page in pdf_reader.pages:
-                    page_text = page.extract_text()
-                    if page_text:
-                        pdf_text += page_text + "\n"
+            pdf_file_obj = BytesIO(pdf_bytes)
+            pdf_reader = PyPDF2.PdfReader(pdf_file_obj)
+            for page in pdf_reader.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    pdf_text += page_text + "\n"
         except Exception as e:
             return jsonify({"error": f"Failed to read PDF: {str(e)}"}), 400
         
@@ -467,7 +473,7 @@ def upload_pdf():
         uploaded_pdf_text[filename] = pdf_text
         session['pdf_filename'] = filename
         
-        print(f"PDF text extracted successfully: {len(pdf_text)} characters")
+        print(f"PDF text extracted successfully: {len(pdf_text)} characters (in-memory)")
         
         return jsonify({
             "success": True,
@@ -483,7 +489,15 @@ def upload_pdf():
 
 @app.route('/pdf/<filename>')
 def serve_pdf(filename):
-    return send_file(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    # Serve PDF from memory (no disk read - Vercel compatible!)
+    pdf_bytes = uploaded_pdf_data.get(filename)
+    if pdf_bytes:
+        return Response(
+            pdf_bytes,
+            mimetype='application/pdf',
+            headers={'Content-Disposition': f'inline; filename={filename}'}
+        )
+    return jsonify({"error": "PDF not found"}), 404
 
 @app.route('/chat', methods=['POST'])
 def chat():
