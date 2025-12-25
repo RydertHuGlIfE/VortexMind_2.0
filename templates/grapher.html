@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Graph Plotter - VortexMind</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='input.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='grapher.css') }}" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favico.ico') }}">
+    <!-- Function Plot Library -->
+    <script src="https://unpkg.com/d3@7"></script>
+    <script src="https://unpkg.com/function-plot@1/dist/function-plot.js"></script>
+</head>
+
+<body>
+    <!-- Back Button -->
+    <a href="/" class="back-btn">
+        <span>←</span> Back to Portal
+    </a>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <div class="logo-icon">📈</div>
+                <div class="logo-text">
+                    <h1>Graph Plotter</h1>
+                    <p>Equation Visualizer</p>
+                </div>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span>Ready</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="date-section">
+                <div class="date-label">Today's Date</div>
+                <div class="date-value" id="currentDate">Loading...</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="page-header">
+            <h2>Equation Graph Plotter 📊</h2>
+            <p>Visualize mathematical equations with interactive graphs</p>
+        </div>
+
+        <div class="grapher-container">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <div class="panel-title">Equations</div>
+
+                <div class="error-message" id="errorMessage">
+                    <span>⚠️</span>
+                    <span id="errorText"></span>
+                </div>
+
+                <div class="equation-section">
+                    <div class="equation-list" id="equationList">
+                        <div class="equation-item" data-id="1">
+                            <input type="color" class="equation-color" value="#06b6d4" title="Pick color">
+                            <input type="text" class="equation-input" placeholder="y = x^2" value="x^2">
+                            <button class="remove-eq-btn" title="Remove">×</button>
+                        </div>
+                    </div>
+                    <button class="add-equation-btn" id="addEquationBtn">
+                        <span>+</span> Add Equation
+                    </button>
+                </div>
+
+                <button class="plot-btn" id="plotBtn">
+                    <span>📈</span> Plot Graph
+                </button>
+
+                <div class="range-section">
+                    <div class="range-title">Axis Range</div>
+                    <div class="range-row">
+                        <div class="range-input-group">
+                            <label>X Min</label>
+                            <input type="number" id="xMin" value="-10">
+                        </div>
+                        <div class="range-input-group">
+                            <label>X Max</label>
+                            <input type="number" id="xMax" value="10">
+                        </div>
+                    </div>
+                    <div class="range-row">
+                        <div class="range-input-group">
+                            <label>Y Min</label>
+                            <input type="number" id="yMin" value="-10">
+                        </div>
+                        <div class="range-input-group">
+                            <label>Y Max</label>
+                            <input type="number" id="yMax" value="10">
+                        </div>
+                    </div>
+
+                    <div class="toggle-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="gridToggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label">Show Grid</span>
+                    </div>
+                </div>
+
+                <div class="examples-section">
+                    <div class="examples-title">Quick Examples</div>
+                    <div class="example-chips">
+                        <div class="example-chip" data-eq="x^2">x²</div>
+                        <div class="example-chip" data-eq="sin(x)">sin(x)</div>
+                        <div class="example-chip" data-eq="cos(x)">cos(x)</div>
+                        <div class="example-chip" data-eq="tan(x)">tan(x)</div>
+                        <div class="example-chip" data-eq="exp(x)">eˣ</div>
+                        <div class="example-chip" data-eq="log(x)">log(x)</div>
+                        <div class="example-chip" data-eq="sqrt(x)">√x</div>
+                        <div class="example-chip" data-eq="x^3 - x">x³-x</div>
+                        <div class="example-chip" data-eq="x^2 + y^2 - 25" data-implicit="true">Circle</div>
+                        <div class="example-chip" data-eq="y - x" data-implicit="true">y = x</div>
+                        <div class="example-chip" data-eq="x^2 - y^2 - 4" data-implicit="true">Hyperbola</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graph Panel -->
+            <div class="graph-panel">
+                <div class="graph-header">
+                    <div class="graph-title">
+                        <span>📊</span> Graph View
+                    </div>
+                    <div class="graph-actions">
+                        <button class="graph-action-btn" id="resetZoomBtn">
+                            🔄 Reset
+                        </button>
+                        <button class="graph-action-btn" id="downloadBtn">
+                            📥 Save
+                        </button>
+                    </div>
+                </div>
+
+                <div id="graph-container">
+                    <div class="coordinate-display" id="coordDisplay">
+                        x: <span id="coordX">0.00</span>, y: <span id="coordY">0.00</span>
+                    </div>
+                </div>
+
+                <div class="graph-legend" id="graphLegend"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let equationCounter = 1;
+        let currentPlot = null;
+        const colors = ['#06b6d4', '#8b5cf6', '#22c55e', '#f97316', '#ec4899', '#eab308', '#ef4444', '#6366f1'];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            plotGraph(); // Initial plot
+        });
+
+        // Date/Time
+        function updateDateTime() {
+            const now = new Date();
+            const dateString = now.toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+            const timeString = now.toLocaleTimeString('en-US', {
+                hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+            document.getElementById('currentDate').textContent = `${dateString} • ${timeString}`;
+        }
+
+        // Add Equation
+        document.getElementById('addEquationBtn').addEventListener('click', () => {
+            equationCounter++;
+            const colorIndex = (equationCounter - 1) % colors.length;
+            const item = document.createElement('div');
+            item.className = 'equation-item';
+            item.dataset.id = equationCounter;
+            item.innerHTML = `
+                <input type="color" class="equation-color" value="${colors[colorIndex]}" title="Pick color">
+                <input type="text" class="equation-input" placeholder="Enter equation">
+                <button class="remove-eq-btn" title="Remove">×</button>
+            `;
+            document.getElementById('equationList').appendChild(item);
+        });
+
+        // Remove Equation
+        document.getElementById('equationList').addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-eq-btn')) {
+                const items = document.querySelectorAll('.equation-item');
+                if (items.length > 1) {
+                    e.target.closest('.equation-item').remove();
+                }
+            }
+        });
+
+        // Example chips
+        document.querySelectorAll('.example-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                const firstInput = document.querySelector('.equation-input');
+                if (firstInput) {
+                    firstInput.value = chip.dataset.eq;
+                    plotGraph();
+                }
+            });
+        });
+
+        // Plot Button
+        document.getElementById('plotBtn').addEventListener('click', plotGraph);
+
+        // Plot on Enter key
+        document.getElementById('equationList').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                plotGraph();
+            }
+        });
+
+        // Range inputs - plot on change
+        ['xMin', 'xMax', 'yMin', 'yMax'].forEach(id => {
+            document.getElementById(id).addEventListener('change', plotGraph);
+        });
+
+        // Grid toggle
+        document.getElementById('gridToggle').addEventListener('change', plotGraph);
+
+        // Main Plot Function
+        function plotGraph() {
+            const container = document.getElementById('graph-container');
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            const legendDiv = document.getElementById('graphLegend');
+
+            // Hide error
+            errorDiv.classList.remove('show');
+
+            // Get equations
+            const equations = [];
+            document.querySelectorAll('.equation-item').forEach(item => {
+                const input = item.querySelector('.equation-input').value.trim();
+                const color = item.querySelector('.equation-color').value;
+                if (input) {
+                    // Clean up equation - remove "y =" prefix if present
+                    let fn = input.replace(/^y\s*=\s*/i, '').trim();
+                    equations.push({ fn, color, original: input });
+                }
+            });
+
+            if (equations.length === 0) {
+                errorDiv.classList.add('show');
+                errorText.textContent = 'Please enter at least one equation';
+                return;
+            }
+
+            // Get range
+            const xMin = parseFloat(document.getElementById('xMin').value) || -10;
+            const xMax = parseFloat(document.getElementById('xMax').value) || 10;
+            const yMin = parseFloat(document.getElementById('yMin').value) || -10;
+            const yMax = parseFloat(document.getElementById('yMax').value) || 10;
+            const showGrid = document.getElementById('gridToggle').checked;
+
+            // Build data array - detect implicit equations
+            const data = equations.map(eq => {
+                let fn = eq.fn;
+                let isImplicit = false;
+
+                // Check if it's an x = something equation (vertical line or x-based)
+                const xEqualsMatch = eq.original.match(/^x\s*=\s*(.+)$/i);
+                if (xEqualsMatch) {
+                    // Convert "x = 5" to "x - 5" (implicit form: x - 5 = 0)
+                    const rightSide = xEqualsMatch[1].trim();
+                    fn = `x - (${rightSide})`;
+                    isImplicit = true;
+                }
+                // Check if equation contains 'y' - treat as implicit
+                else if (/\by\b/.test(fn)) {
+                    isImplicit = true;
+                }
+
+                if (isImplicit) {
+                    // Implicit equation: f(x,y) = 0
+                    return {
+                        fn: fn,
+                        fnType: 'implicit',
+                        color: eq.color
+                    };
+                } else {
+                    // Explicit equation: y = f(x)
+                    return {
+                        fn: fn,
+                        color: eq.color,
+                        graphType: 'polyline',
+                        skipTip: true
+                    };
+                }
+            });
+
+            // Clear container
+            container.innerHTML = '<div class="coordinate-display" id="coordDisplay">x: <span id="coordX">0.00</span>, y: <span id="coordY">0.00</span></div>';
+
+            try {
+                currentPlot = functionPlot({
+                    target: '#graph-container',
+                    width: container.clientWidth,
+                    height: 600,
+                    xAxis: { domain: [xMin, xMax] },
+                    yAxis: { domain: [yMin, yMax] },
+                    grid: showGrid,
+                    data: data,
+                    tip: {
+                        xLine: true,
+                        yLine: true,
+                        renderer: function (x, y) {
+                            document.getElementById('coordX').textContent = x.toFixed(3);
+                            document.getElementById('coordY').textContent = y.toFixed(3);
+                            document.getElementById('coordDisplay').classList.add('visible');
+                            return '';
+                        }
+                    }
+                });
+
+                // Build legend
+                legendDiv.innerHTML = equations.map(eq => {
+                    const isXEquals = /^x\s*=\s*.+$/i.test(eq.original);
+                    const hasY = /\by\b/.test(eq.fn);
+
+                    let displayEq;
+                    if (isXEquals) {
+                        // Show as-is for x = value equations
+                        displayEq = eq.original;
+                    } else if (hasY) {
+                        // Show implicit equation with = 0
+                        displayEq = `${eq.original} = 0`;
+                    } else {
+                        // Show as y = f(x)
+                        displayEq = `y = ${eq.original.replace(/^y\s*=\s*/i, '')}`;
+                    }
+
+                    return `
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: ${eq.color}"></div>
+                            <span>${displayEq}</span>
+                        </div>
+                    `;
+                }).join('');
+
+                // Hide coord display when mouse leaves
+                container.addEventListener('mouseleave', () => {
+                    document.getElementById('coordDisplay').classList.remove('visible');
+                });
+
+            } catch (err) {
+                errorDiv.classList.add('show');
+                errorText.textContent = 'Invalid equation: ' + err.message;
+                console.error('Plot error:', err);
+            }
+        }
+
+        // Reset Zoom
+        document.getElementById('resetZoomBtn').addEventListener('click', () => {
+            document.getElementById('xMin').value = -10;
+            document.getElementById('xMax').value = 10;
+            document.getElementById('yMin').value = -10;
+            document.getElementById('yMax').value = 10;
+            plotGraph();
+        });
+
+        // Download PNG
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const svg = document.querySelector('#graph-container svg');
+            if (!svg) return;
+
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+
+            canvas.width = svg.clientWidth * 2;
+            canvas.height = svg.clientHeight * 2;
+
+            img.onload = () => {
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                const link = document.createElement('a');
+                link.download = 'graph.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            };
+
+            img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+        });
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            if (currentPlot) {
+                plotGraph();
+            }
+        });
+    </script>
+</body>
+
+</html>

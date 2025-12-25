@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>AI Humanizer - VortexMind Educator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='input.css') }}" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favico.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='tools.css') }}" />
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <div class="logo-icon">🧠</div>
+                <div class="logo-text">
+                    <h1>VortexMind Educator</h1>
+                    <p>AI Humanizer</p>
+                </div>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span>AI Online</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="date-section">
+                <div class="date-label">Today's Date</div>
+                <div class="date-value" id="currentDate">Loading...</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <a href="/" class="back-btn">
+            <span>←</span> Back to Portal
+        </a>
+
+        <!-- Humanizer Input Section -->
+        <div class="humanizer-section">
+            <div class="humanizer-header">
+                <div class="humanizer-icon">✍️</div>
+                <div class="humanizer-title">
+                    <h2>AI Humanizer</h2>
+                    <p>Transform AI-generated text into natural, human-like writing</p>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h4>💡 How it works</h4>
+                <p>Paste any AI-generated text below and our AI will rewrite it to sound more natural, conversational,
+                    and human. Perfect for essays, emails, content, and more!</p>
+            </div>
+
+            <!-- Style Selector -->
+            <div class="style-selector">
+                <button class="style-btn active" data-style="natural">🗣️ Natural</button>
+                <button class="style-btn" data-style="casual">😊 Casual</button>
+                <button class="style-btn" data-style="professional">💼 Professional</button>
+                <button class="style-btn" data-style="academic">🎓 Academic</button>
+                <button class="style-btn" data-style="creative">🎨 Creative</button>
+            </div>
+
+            <form id="humanizerForm">
+                <!-- Text Input -->
+                <div class="input-group">
+                    <label>Paste AI-generated text to humanize:</label>
+                    <textarea class="text-textarea" id="textInput"
+                        placeholder="Paste your AI-generated text here...
+
+Example: 'Artificial intelligence has revolutionized numerous industries by enabling machines to perform tasks that traditionally required human intelligence.'"></textarea>
+                    <div class="char-count"><span id="charCount">0</span> characters</div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span>✨</span> Humanize Text
+                </button>
+            </form>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div class="loading-indicator" id="loadingIndicator">
+            <div class="loading-spinner"></div>
+            <p style="color: var(--gray-400);">AI is humanizing your text...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- Result Section -->
+        <div class="result-section" id="resultSection">
+            <div class="result-header">
+                <div class="result-header-left">
+                    <span style="font-size: 24px;">✨</span>
+                    <h3>Humanized Text</h3>
+                </div>
+                <button class="copy-btn" id="copyBtn">
+                    <span>📋</span> Copy
+                </button>
+            </div>
+            <div class="result-content" id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // Realtime Date
+        function updateDateTime() {
+            const now = new Date();
+            const dateString = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('currentDate').textContent = `${dateString} • ${timeString}`;
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+
+        // Style selector
+        let currentStyle = 'natural';
+        const styleBtns = document.querySelectorAll('.style-btn');
+
+        styleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                styleBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentStyle = btn.dataset.style;
+            });
+        });
+
+        // Character count
+        const textInput = document.getElementById('textInput');
+        const charCount = document.getElementById('charCount');
+
+        textInput.addEventListener('input', () => {
+            charCount.textContent = textInput.value.length;
+        });
+
+        // Copy button
+        const copyBtn = document.getElementById('copyBtn');
+        const resultContent = document.getElementById('resultContent');
+
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(resultContent.textContent).then(() => {
+                copyBtn.innerHTML = '<span>✅</span> Copied!';
+                copyBtn.classList.add('copied');
+                setTimeout(() => {
+                    copyBtn.innerHTML = '<span>📋</span> Copy';
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            });
+        });
+
+        // Form submission
+        const humanizerForm = document.getElementById('humanizerForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const errorMessage = document.getElementById('errorMessage');
+        const resultSection = document.getElementById('resultSection');
+
+        humanizerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const text = textInput.value.trim();
+
+            if (!text) {
+                errorMessage.textContent = '❌ Please paste some text to humanize.';
+                errorMessage.classList.add('active');
+                return;
+            }
+
+            if (text.length < 20) {
+                errorMessage.textContent = '❌ Please provide a longer text (at least 20 characters).';
+                errorMessage.classList.add('active');
+                return;
+            }
+
+            // Show loading
+            loadingIndicator.classList.add('active');
+            resultSection.classList.remove('active');
+            errorMessage.classList.remove('active');
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/humanizer/convert', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, style: currentStyle })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                resultContent.textContent = data.response;
+                resultSection.classList.add('active');
+
+            } catch (error) {
+                errorMessage.textContent = '❌ ' + (error.message || 'Failed to humanize text. Please try again.');
+                errorMessage.classList.add('active');
+            } finally {
+                loadingIndicator.classList.remove('active');
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

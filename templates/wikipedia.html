@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Wikipedia Lookup - VortexMind Educator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='input.css') }}" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favico.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='tools.css') }}" />
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <div class="logo-icon">🧠</div>
+                <div class="logo-text">
+                    <h1>VortexMind Educator</h1>
+                    <p>Wikipedia Lookup</p>
+                </div>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span>AI Online</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="date-section">
+                <div class="date-label">Today's Date</div>
+                <div class="date-value" id="currentDate">Loading...</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <a href="/" class="back-btn">
+            <span>←</span> Back to Portal
+        </a>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="search-header">
+                <div class="search-icon">🌐</div>
+                <div class="search-title">
+                    <h2>Wikipedia Lookup</h2>
+                    <p>Search any topic and get an AI-powered summary</p>
+                </div>
+            </div>
+
+            <form id="searchForm" class="search-form">
+                <input type="text" id="searchQuery" class="search-input"
+                    placeholder="Enter a topic (e.g., Quantum Physics, World War II, Python Programming...)" required />
+                <button type="submit" class="search-btn" id="searchBtn">
+                    <span>🔍</span> Search
+                </button>
+            </form>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div class="loading-indicator" id="loadingIndicator">
+            <div class="loading-spinner"></div>
+            <p style="color: var(--gray-400);">Searching Wikipedia and generating summary...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- Result Section -->
+        <div class="result-section" id="resultSection">
+            <h2 class="result-title">
+                <span>📚</span>
+                <span id="resultTitle">Topic</span>
+            </h2>
+            <p class="result-meta" id="resultMeta">AI-generated summary based on Wikipedia</p>
+            <div class="result-content" id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // Realtime Date
+        function updateDateTime() {
+            const now = new Date();
+            const dateString = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('currentDate').textContent = `${dateString} • ${timeString}`;
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+
+        // Search Form
+        const searchForm = document.getElementById('searchForm');
+        const searchQuery = document.getElementById('searchQuery');
+        const searchBtn = document.getElementById('searchBtn');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const errorMessage = document.getElementById('errorMessage');
+        const resultSection = document.getElementById('resultSection');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultContent = document.getElementById('resultContent');
+
+        searchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const query = searchQuery.value.trim();
+            if (!query) return;
+
+            // Show loading, hide results
+            loadingIndicator.classList.add('active');
+            resultSection.classList.remove('active');
+            errorMessage.classList.remove('active');
+            searchBtn.disabled = true;
+
+            try {
+                const response = await fetch('/wikipedia/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Display results
+                resultTitle.textContent = data.title || query;
+                resultContent.innerHTML = data.summary;
+                resultSection.classList.add('active');
+
+            } catch (error) {
+                errorMessage.textContent = '❌ ' + (error.message || 'Failed to fetch results. Please try again.');
+                errorMessage.classList.add('active');
+            } finally {
+                loadingIndicator.classList.remove('active');
+                searchBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

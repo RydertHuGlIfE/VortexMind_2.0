@@ -1,0 +1,294 @@
+/* Portal Page Styles */
+
+.portal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.portal-card {
+    background: rgba(15, 10, 40, 0.8);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border-radius: 24px;
+    padding: 32px 24px;
+    text-align: center;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    display: block;
+}
+
+.portal-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.portal-card:hover::before {
+    opacity: 1;
+}
+
+.portal-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    border-color: var(--primary-bright);
+    box-shadow:
+        0 20px 60px rgba(168, 85, 247, 0.3),
+        0 0 80px rgba(168, 85, 247, 0.15);
+}
+
+.portal-card.pdf-card:hover {
+    border-color: #a855f7;
+    box-shadow:
+        0 20px 60px rgba(168, 85, 247, 0.4),
+        0 0 80px rgba(168, 85, 247, 0.2);
+}
+
+.portal-card.wiki-card:hover {
+    border-color: #22d3ee;
+    box-shadow:
+        0 20px 60px rgba(34, 211, 238, 0.4),
+        0 0 80px rgba(34, 211, 238, 0.2);
+}
+
+.portal-card.code-card:hover {
+    border-color: #4ade80;
+    box-shadow:
+        0 20px 60px rgba(74, 222, 128, 0.4),
+        0 0 80px rgba(74, 222, 128, 0.2);
+}
+
+.portal-card.humanizer-card:hover {
+    border-color: #f97316;
+    box-shadow:
+        0 20px 60px rgba(249, 115, 22, 0.4),
+        0 0 80px rgba(249, 115, 22, 0.2);
+}
+
+.portal-card.whiteboard-card:hover {
+    border-color: #f472b6;
+    box-shadow:
+        0 20px 60px rgba(244, 114, 182, 0.4),
+        0 0 80px rgba(244, 114, 182, 0.2);
+}
+
+.portal-card.grapher-card:hover {
+    border-color: #06b6d4;
+    box-shadow:
+        0 20px 60px rgba(6, 182, 212, 0.4),
+        0 0 80px rgba(6, 182, 212, 0.2);
+}
+
+.portal-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    transition: all 0.4s ease;
+}
+
+.pdf-card .portal-icon {
+    background: linear-gradient(135deg, #a855f7, #ec4899);
+    box-shadow: 0 0 40px rgba(168, 85, 247, 0.5);
+}
+
+.wiki-card .portal-icon {
+    background: linear-gradient(135deg, #22d3ee, #3b82f6);
+    box-shadow: 0 0 40px rgba(34, 211, 238, 0.5);
+}
+
+.code-card .portal-icon {
+    background: linear-gradient(135deg, #4ade80, #22d3ee);
+    box-shadow: 0 0 40px rgba(74, 222, 128, 0.5);
+}
+
+.humanizer-card .portal-icon {
+    background: linear-gradient(135deg, #f97316, #ec4899);
+    box-shadow: 0 0 40px rgba(249, 115, 22, 0.5);
+}
+
+.whiteboard-card .portal-icon {
+    background: linear-gradient(135deg, #f472b6, #a855f7);
+    box-shadow: 0 0 40px rgba(244, 114, 182, 0.5);
+}
+
+.grapher-card .portal-icon {
+    background: linear-gradient(135deg, #06b6d4, #3b82f6);
+    box-shadow: 0 0 40px rgba(6, 182, 212, 0.5);
+}
+
+.portal-card:hover .portal-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.portal-card h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 10px;
+}
+
+.portal-card p {
+    font-size: 14px;
+    color: var(--gray-400);
+    line-height: 1.5;
+}
+
+.portal-tag {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 16px;
+}
+
+.pdf-card .portal-tag {
+    background: rgba(168, 85, 247, 0.2);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+}
+
+.wiki-card .portal-tag {
+    background: rgba(34, 211, 238, 0.2);
+    color: #67e8f9;
+    border: 1px solid rgba(34, 211, 238, 0.4);
+}
+
+.code-card .portal-tag {
+    background: rgba(74, 222, 128, 0.2);
+    color: #86efac;
+    border: 1px solid rgba(74, 222, 128, 0.4);
+}
+
+.humanizer-card .portal-tag {
+    background: rgba(249, 115, 22, 0.2);
+    color: #fdba74;
+    border: 1px solid rgba(249, 115, 22, 0.4);
+}
+
+.whiteboard-card .portal-tag {
+    background: rgba(244, 114, 182, 0.2);
+    color: #f9a8d4;
+    border: 1px solid rgba(244, 114, 182, 0.4);
+}
+
+.grapher-card .portal-tag {
+    background: rgba(6, 182, 212, 0.2);
+    color: #67e8f9;
+    border: 1px solid rgba(6, 182, 212, 0.4);
+}
+
+.container {
+    max-width: 1100px;
+}
+
+.welcome-section {
+    margin-bottom: 60px;
+}
+
+.welcome-section h2 {
+    font-size: 52px;
+}
+
+.welcome-section .subtitle {
+    font-size: 18px;
+    color: var(--gray-300);
+    margin-top: 12px;
+}
+
+/* Floating particles animation */
+.particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: var(--primary);
+    border-radius: 50%;
+    opacity: 0.3;
+    animation: float-up 15s infinite linear;
+}
+
+.particle:nth-child(2) {
+    left: 20%;
+    animation-delay: 2s;
+    background: var(--accent);
+}
+
+.particle:nth-child(3) {
+    left: 40%;
+    animation-delay: 4s;
+    background: var(--secondary);
+}
+
+.particle:nth-child(4) {
+    left: 60%;
+    animation-delay: 6s;
+    background: var(--neon-green);
+}
+
+.particle:nth-child(5) {
+    left: 80%;
+    animation-delay: 8s;
+    background: var(--primary);
+}
+
+@keyframes float-up {
+    0% {
+        transform: translateY(100vh) scale(0);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 0.3;
+    }
+
+    90% {
+        opacity: 0.3;
+    }
+
+    100% {
+        transform: translateY(-100vh) scale(1);
+        opacity: 0;
+    }
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .portal-grid {
+        grid-template-columns: 1fr;
+        max-width: 400px;
+    }
+
+    .welcome-section h2 {
+        font-size: 36px;
+    }
+}

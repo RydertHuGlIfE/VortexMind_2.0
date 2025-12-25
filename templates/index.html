@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>VortexMind Educator - AI Study Assistant</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='input.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favico.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='portal.css') }}" />
+</head>
+
+<body>
+  <!-- Floating Particles -->
+  <div class="particles">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">
+        <div class="logo-icon">🧠</div>
+        <div class="logo-text">
+          <h1>VortexMind Educator</h1>
+          <p>AI Study Assistant</p>
+        </div>
+      </div>
+    </div>
+    <div class="header-center">
+      <div class="status-indicator">
+        <span class="status-dot"></span>
+        <span>AI Online</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="date-section">
+        <div class="date-label">Today's Date</div>
+        <div class="date-value" id="currentDate">Loading...</div>
+      </div>
+      <div class="user-profile">
+        <div class="user-avatar">S</div>
+        <div class="user-info">
+          <span class="user-name">Student</span>
+          <span class="user-tier">Premium</span>
+        </div>
+      </div>
+      <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+        <span class="theme-icon">🌙</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="container">
+    <div class="welcome-section">
+      <h2>Choose Your Tool 🚀</h2>
+      <p class="subtitle">Select a learning assistant to get started</p>
+    </div>
+
+    <!-- Portal Cards -->
+    <div class="portal-grid">
+      <!-- PDF Summarizer Card -->
+      <a href="/pdfinput" class="portal-card pdf-card">
+        <div class="portal-icon">📄</div>
+        <h3>PDF Summarizer</h3>
+        <p>Upload PDFs and chat with AI to summarize, quiz yourself, and create mind maps</p>
+        <span class="portal-tag">Documents</span>
+      </a>
+
+      <!-- Wikipedia Lookup Card -->
+      <a href="/wikipedia" class="portal-card wiki-card">
+        <div class="portal-icon">🌐</div>
+        <h3>Wikipedia Lookup</h3>
+        <p>Search and get AI-powered summaries of Wikipedia articles instantly</p>
+        <span class="portal-tag">Research</span>
+      </a>
+
+      <!-- Code Helper Card -->
+      <a href="/codehelper" class="portal-card code-card">
+        <div class="portal-icon">💻</div>
+        <h3>Code Helper</h3>
+        <p>Get help with coding problems, debug errors, and learn programming concepts</p>
+        <span class="portal-tag">Programming</span>
+      </a>
+
+      <!-- AI Humanizer Card -->
+      <a href="/humanizer" class="portal-card humanizer-card">
+        <div class="portal-icon">✍️</div>
+        <h3>AI Humanizer</h3>
+        <p>Transform AI-generated text into natural, human-like writing instantly</p>
+        <span class="portal-tag">Writing</span>
+      </a>
+
+      <!-- Whiteboard Card -->
+      <a href="/whiteboard" class="portal-card whiteboard-card">
+        <div class="portal-icon">🎨</div>
+        <h3>Whiteboard</h3>
+        <p>Draw, sketch, and brainstorm with 8 pens, highlighter, shapes, and more</p>
+        <span class="portal-tag">Creative</span>
+      </a>
+
+      <!-- Graph Plotter Card -->
+      <a href="/grapher" class="portal-card grapher-card">
+        <div class="portal-icon">📈</div>
+        <h3>Graph Plotter</h3>
+        <p>Visualize equations with interactive graphs • Supports polynomials, trig, exponentials & more</p>
+        <span class="portal-tag">Mathematics</span>
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // Realtime Date Display
+    function updateDateTime() {
+      const now = new Date();
+      const dateString = now.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      const timeString = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      document.getElementById('currentDate').textContent = `${dateString} • ${timeString}`;
+    }
+
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+
+    // Theme Toggle
+    const themeToggle = document.getElementById("themeToggle");
+    const themeIcon = document.querySelector(".theme-icon");
+    const savedTheme = localStorage.getItem("theme") || "dark";
+    document.body.setAttribute("data-theme", savedTheme);
+    themeIcon.textContent = savedTheme === "dark" ? "☀️" : "🌙";
+
+    themeToggle.addEventListener("click", () => {
+      const currentTheme = document.body.getAttribute("data-theme");
+      const newTheme = currentTheme === "dark" ? "light" : "dark";
+      document.body.setAttribute("data-theme", newTheme);
+      localStorage.setItem("theme", newTheme);
+      themeIcon.textContent = newTheme === "dark" ? "☀️" : "🌙";
+    });
+  </script>
+</body>
+
+</html>

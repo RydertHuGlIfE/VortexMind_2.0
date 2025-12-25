@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Code Helper - VortexMind Educator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='input.css') }}" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet" />
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favico.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='tools.css') }}" />
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <div class="logo-icon">🧠</div>
+                <div class="logo-text">
+                    <h1>VortexMind Educator</h1>
+                    <p>Code Helper</p>
+                </div>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span>AI Online</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="date-section">
+                <div class="date-label">Today's Date</div>
+                <div class="date-value" id="currentDate">Loading...</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <a href="/" class="back-btn">
+            <span>←</span> Back to Portal
+        </a>
+
+        <!-- Code Input Section -->
+        <div class="code-section">
+            <div class="code-header">
+                <div class="code-icon">💻</div>
+                <div class="code-title">
+                    <h2>Code Helper</h2>
+                    <p>Get help with debugging, explanations, and coding questions</p>
+                </div>
+            </div>
+
+            <!-- Mode Selector -->
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="explain">🔍 Explain Code</button>
+                <button class="mode-btn" data-mode="debug">🐛 Debug Error</button>
+                <button class="mode-btn" data-mode="error">⚠️ Error Explainer</button>
+                <button class="mode-btn" data-mode="optimize">⚡ Optimize Code</button>
+                <button class="mode-btn" data-mode="question">❓ Ask Question</button>
+            </div>
+
+            <form id="codeForm">
+                <!-- Code Input -->
+                <div class="input-group" id="codeInputGroup">
+                    <label>Paste your code here:</label>
+                    <textarea class="code-textarea" id="codeInput" placeholder="// Paste your code here...
+function example() {
+  console.log('Hello World');
+}"></textarea>
+                </div>
+
+                <!-- Question/Error Input -->
+                <div class="input-group">
+                    <label id="questionLabel">Describe your question or issue (optional):</label>
+                    <input type="text" class="question-input" id="questionInput"
+                        placeholder="e.g., Why is this function not returning the expected value?" />
+                    <div class="quick-prompts">
+                        <span class="quick-prompt">What does this code do?</span>
+                        <span class="quick-prompt">Find bugs in this code</span>
+                        <span class="quick-prompt">How can I make this faster?</span>
+                        <span class="quick-prompt">Convert to Python</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span>🚀</span> Get AI Help
+                </button>
+            </form>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div class="loading-indicator" id="loadingIndicator">
+            <div class="loading-spinner"></div>
+            <p style="color: var(--gray-400);">AI is analyzing your code...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- Result Section -->
+        <div class="result-section" id="resultSection">
+            <div class="result-header">
+                <span style="font-size: 24px;">✨</span>
+                <h3>AI Response</h3>
+            </div>
+            <div class="result-content" id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // Realtime Date
+        function updateDateTime() {
+            const now = new Date();
+            const dateString = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('currentDate').textContent = `${dateString} • ${timeString}`;
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+
+        // Mode selector
+        let currentMode = 'explain';
+        const modeBtns = document.querySelectorAll('.mode-btn');
+        const questionLabel = document.getElementById('questionLabel');
+
+        modeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                modeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentMode = btn.dataset.mode;
+
+                // Update label based on mode
+                const labels = {
+                    explain: 'Describe what you want explained (optional):',
+                    debug: 'Describe the error or unexpected behavior:',
+                    error: 'Paste the error message you want explained:',
+                    optimize: 'What aspect do you want optimized? (optional):',
+                    question: 'Ask your coding question:'
+                };
+                questionLabel.textContent = labels[currentMode];
+            });
+        });
+
+        // Quick prompts
+        const quickPrompts = document.querySelectorAll('.quick-prompt');
+        const questionInput = document.getElementById('questionInput');
+
+        quickPrompts.forEach(prompt => {
+            prompt.addEventListener('click', () => {
+                questionInput.value = prompt.textContent;
+            });
+        });
+
+        // Form submission
+        const codeForm = document.getElementById('codeForm');
+        const codeInput = document.getElementById('codeInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const errorMessage = document.getElementById('errorMessage');
+        const resultSection = document.getElementById('resultSection');
+        const resultContent = document.getElementById('resultContent');
+
+        codeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const code = codeInput.value.trim();
+            const question = questionInput.value.trim();
+
+            if (!code && !question) {
+                errorMessage.textContent = '❌ Please provide some code or ask a question.';
+                errorMessage.classList.add('active');
+                return;
+            }
+
+            // Show loading
+            loadingIndicator.classList.add('active');
+            resultSection.classList.remove('active');
+            errorMessage.classList.remove('active');
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/codehelper/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, question, mode: currentMode })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                resultContent.innerHTML = data.response;
+                resultSection.classList.add('active');
+
+            } catch (error) {
+                errorMessage.textContent = '❌ ' + (error.message || 'Failed to get response. Please try again.');
+                errorMessage.classList.add('active');
+            } finally {
+                loadingIndicator.classList.remove('active');
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>
