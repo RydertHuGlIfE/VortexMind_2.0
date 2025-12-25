@@ -18,7 +18,7 @@ from io import BytesIO
 app = Flask(__name__)
 
 # In-memory storage for Vercel compatibility (no disk writes needed)
-app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max
+app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024  # 4MB max (Vercel serverless limit)
 ALLOWED_EXTENSIONS = {'pdf'}
 app.secret_key = "nullisgreat"   
 
@@ -513,8 +513,8 @@ def chat():
     if not pdf_text:
         return jsonify({"error": "PDF text not found. Please re-upload."}), 400
 
-    # Limit text to avoid token limits (first 15000 chars)
-    pdf_content = pdf_text[:15000]
+    # Limit text to avoid token limits (first 50000 chars ~ 12500 tokens)
+    pdf_content = pdf_text[:50000]
 
     prompt = f"""
 You are a helpful assistant. Answer questions based on the following PDF content.
@@ -571,7 +571,7 @@ def summarize():
         return jsonify({"error": "PDF text not found. Please re-upload."}), 400
 
     # Limit text to avoid token limits
-    pdf_content = pdf_text[:15000]
+    pdf_content = pdf_text[:50000]
 
     prompt = f"""
 You are a helpful assistant. Provide an HTML-only summary of this PDF document.
@@ -618,7 +618,7 @@ def start_quiz():
         return jsonify({"error": "PDF text not found. Please re-upload."}), 400
 
     # Limit text to avoid token limits
-    pdf_content = pdf_text[:12000]
+    pdf_content = pdf_text[:50000]
 
     seed = random.randint(1000, 9999)
 
@@ -798,7 +798,7 @@ def mindmap():
         return jsonify({"error": "PDF text not found. Please re-upload."}), 400
     
     # Limit text to avoid token limits
-    pdf_content = pdf_text[:15000]
+    pdf_content = pdf_text[:50000]
     
     prompt = f"""You are a highly sophisticated AI. Create the best mindmap based on this PDF content.
     
@@ -854,3 +854,6 @@ def handle_413(e):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+# Vercel serverless entry point
+application = app
